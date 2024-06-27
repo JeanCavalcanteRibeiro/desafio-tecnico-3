@@ -94,8 +94,8 @@ class ExternalSort
 	public function external_sort()
 	{
 		$this->createTemporaryFolder();
-		// $this->sortChunks();
-		// $this->mergeChunks();
+		$chunk_count = $this->sortChunks();
+		// $this->mergeChunks($chunk_count);
 	}
 
 	// This is a barebones implementation that probably is around on some textbook somewhere. This is not going to come closer to actual optimized quicksort implementations.
@@ -122,7 +122,49 @@ class ExternalSort
 		return array_merge($this->barebones_quicksort($left), [$pivot_key => $pivot], $this->barebones_quicksort($right));
 	}
 
+	/**
+	 * Sorts the chunks of the input file in memory and writes the sorted chunks to temporary files on disk.
+	 * 
+	 * IMPORTANT: This ASSUMES that we have enough disk space to store ALL temporary files at once. A complete implementation would involve
+	 * 			  knowing the available disk space and handling the case where we run out of disk space, which I am not doing here.
+	 *
+	 * @return int The number of chunks created.
+	 */
+	private function sortChunks()
+	{
+		$input_handle = fopen($this->input_file, 'r');
 
+		// Initialize the chunk counter, used for naming temporary files.
+		$chunk_counter = 0;
+
+		while (!feof($input_handle)) {
+			$chunk = fread($input_handle, $this->chunk_size);
+
+			// Convert the chunk to an array of elements. Note that due to PHP shenaningans, its possible for this to go over our set memory limit in some cases.
+			$elements = explode("\n", $chunk);
+			$this->total_elements += count($elements);
+
+			// Sort the elements in memory.
+			$elements = $this->barebones_quicksort($elements);
+
+			// Yep. Not doing it the hard way this time.
+			if ($this->sort_order === 'desc') {
+				$elements = array_reverse($elements);
+			}
+
+			$temp_file = $this->temporary_folder . '/chunk_' . $chunk_counter . '.txt';
+			file_put_contents($temp_file, implode("\n", $elements));
+
+			$chunk_counter++;
+		}
+
+		// Close the input file handle.
+		fclose($input_handle);
+
+		// Return the number of chunks created.
+
+		return $chunk_counter;
+	}
 
 
 

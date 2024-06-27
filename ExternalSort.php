@@ -110,7 +110,7 @@ class ExternalSort
 		reset($array);
 		$pivot_key = key($array);
 		$pivot = array_shift($array);
-		
+
 		foreach ($array as $key => $value) {
 			if ($value < $pivot) {
 				$left[$key] = $value;
@@ -167,6 +167,118 @@ class ExternalSort
 	}
 
 
+	/**
+	 * Merges the sorted chunks into a single output file.
+	 * 
+	 * TODO: proper constraint memory usage when reading files. This implementation will read all files at once, which is not ideal.
+	 */
+	private function mergeChunks($chunk_count)
+	{
+
+		// Open the temporary files for reading. This COMPLETELY ignores $this->memory_limit, as we have all files open at once.
+		// A complete implementation would involve reading a limited number of elements from each file at a time, and that would add I/O complexity to the code.
+
+		// Open the temporary files for reading.
+		$chunk_handles = [];
+		for ($i = 0; $i < $chunk_count; $i++) {
+			$chunk_handles[$i] = fopen($this->temporary_folder . '/chunk_' . $i . '.txt', 'r');
+		}
+
+		// Open the output file for writing.
+		$output_handle = fopen($this->output_file, 'w');
+
+		// Initialize an array to store the current element of each chunk.
+		$current_elements = array_fill(0, $chunk_count, false);
+
+		// Read the first element of each chunk. Will also go over $this->memory_limit if there are too many chunks.
+		for ($i = 0; $i < $chunk_count; $i++) {
+			$current_elements[$i] = fgets($chunk_handles[$i]);
+		}
+
+		$total_sorted = 0;
+
+		// Merge the chunks by selecting the smallest or largest element at each step.
+		while (true) {
+			// Find the index of the smallest or largest element.
+			$index = ($this->sort_order === 'asc') ? $this->findSmallestElementIndex($current_elements) : $this->findLargestElementIndex($current_elements);
+
+			// If all elements are false, we have reached the end of all chunks.
+			if ($index === null) {
+				break;
+			}
+
+			// Write the element to the output file.
+			fwrite($output_handle, $current_elements[$index]);
+
+			// Read the next element from the chunk that had the smallest or largest element.
+			$current_elements[$index] = fgets($chunk_handles[$index]);
+
+			// If the end of the chunk is reached, set the element to false.
+			if ($current_elements[$index] === false) {
+				$current_elements[$index] = false;
+			}
+			$total_sorted++;
+			if ($total_sorted % 10000 === 0) {
+				printf("Sorted %d elements out of %d\n", $total_sorted, $this->total_elements);
+				# Current memory usage, will go down with larger chunk sizes since there are less files open at once. Yep, not a very good implementation.
+				// printf("Memory usage: %d\n", memory_get_usage());
+			} else if ($total_sorted === $this->total_elements) {
+				printf("Sorted %d elements out of %d\n", $total_sorted, $this->total_elements);
+			}
+		}
+
+		// Close the temporary files.
+		foreach ($chunk_handles as $handle) {
+			fclose($handle);
+		}
+
+		// Close the output file.
+		fclose($output_handle);
+	}
+
+	/**
+	 * Finds the index of the smallest element in an array of elements.
+	 *
+	 * @param array $elements The array of elements.
+	 *
+	 * @return int The index of the smallest element.
+	 */
+	private function findSmallestElementIndex($elements)
+	{
+		$smallest_index = null;
+		$smallest_value = null;
+
+		foreach ($elements as $index => $value) {
+			if ($value !== false && ($smallest_value === null || $value < $smallest_value)) {
+				$smallest_index = $index;
+				$smallest_value = $value;
+			}
+		}
+
+		return $smallest_index;
+	}
+
+	/**
+	 * Finds the index of the largest element in an array of elements. Yes, this is just a copy-paste of the previous function, but with the comparison inverted. Another to the list of things that could be improved.
+	 *
+	 * @param array $elements The array of elements.
+	 *
+	 * @return int The index of the largest element.
+	 */
+	private function findLargestElementIndex($elements)
+	{
+		$largest_index = null;
+		$largest_value = null;
+
+		foreach ($elements as $index => $value) {
+			if ($value !== false && ($largest_value === null || $value > $largest_value)) {
+				$largest_index = $index;
+				$largest_value = $value;
+			}
+		}
+
+		return $largest_index;
+	}
 
 	/**
 	 * Creates a temporary folder for storing chunked files.

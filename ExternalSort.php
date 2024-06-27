@@ -91,6 +91,40 @@ class ExternalSort
 		$this->deleteTemporaryFiles();
 	}
 
+	public function external_sort()
+	{
+		$this->createTemporaryFolder();
+		// $this->sortChunks();
+		// $this->mergeChunks();
+	}
+
+	// This is a barebones implementation that probably is around on some textbook somewhere. This is not going to come closer to actual optimized quicksort implementations.
+	public function barebones_quicksort($array)
+	{
+		if (count($array) < 2) {
+			return $array;
+		}
+
+		$left = $right = [];
+
+		reset($array);
+		$pivot_key = key($array);
+		$pivot = array_shift($array);
+		
+		foreach ($array as $key => $value) {
+			if ($value < $pivot) {
+				$left[$key] = $value;
+			} else {
+				$right[$key] = $value;
+			}
+		}
+
+		return array_merge($this->barebones_quicksort($left), [$pivot_key => $pivot], $this->barebones_quicksort($right));
+	}
+
+
+
+
 
 	/**
 	 * Creates a temporary folder for storing chunked files.

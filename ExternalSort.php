@@ -95,7 +95,7 @@ class ExternalSort
 	{
 		$this->createTemporaryFolder();
 		$chunk_count = $this->sortChunks();
-		// $this->mergeChunks($chunk_count);
+		$this->mergeChunks($chunk_count);
 	}
 
 	// This is a barebones implementation that probably is around on some textbook somewhere. This is not going to come closer to actual optimized quicksort implementations.
@@ -301,4 +301,3 @@ class ExternalSort
 		}
 	}
 }
-

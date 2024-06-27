@@ -47,3 +47,9 @@ php ExternalSort.php
 ## How it works
 
 The script will read the input file and divide it into smaller files, based on the memory constraints you set. It will then sort these smaller files and merge them back into a single file, which will be the sorted version of the input file. The target algorithms here are a very basic quicksort implementations, followed by a kinda-inefficient mergesort, which are used to sort the smaller files and merge them back together, respectively. Do note that we are not going to follow the memory constraints on all of the steps, as we are going to do some cheaty stuff to make the code simpler and easier to understand. Bigger chunk sizes will end up resulting in less memory being used, too, as we are going to keep all files open on memory (so this is a pseudo-constrained algorithm, rather than a fully emulated one).
+
+# What next?
+
+1. Implement a more efficient sorting algorithm, like a more efficient quicksort or a heapsort, to sort the smaller files.
+2. Actually implement the memory constraints, so the entire script uses less memory than the set limit, instead of simply doing that for sorting.
+3. Create a main file! ExecuteSort, MainCode, whatever you want to call it. This file will be responsible for calling the other files and managing the entire process. You can just import ExternalSort.php and generateNumbers.php into it, and call the functions from there. I could have done it myself, but I wanted to keep the project simple and easy to understand.

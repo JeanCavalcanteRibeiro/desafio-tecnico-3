@@ -301,3 +301,14 @@ class ExternalSort
 		}
 	}
 }
+
+$current_folder = __DIR__;
+$start_time = microtime(true);
+
+$sorter = new ExternalSort($current_folder . '/tmp', 'input.txt', 'output.txt', 1024, 1024, 'asc');
+
+$sorter->external_sort();
+
+$end_time = microtime(true);
+$elapsed_time = ($end_time - $start_time);
+echo "Elapsed time: " . $elapsed_time . " seconds";

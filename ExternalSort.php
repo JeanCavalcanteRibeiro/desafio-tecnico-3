@@ -216,7 +216,9 @@ class ExternalSort
 			// If the end of the chunk is reached, set the element to false.
 			if ($current_elements[$index] === false) {
 				$current_elements[$index] = false;
+				$index = null;
 			}
+			
 			$total_sorted++;
 			if ($total_sorted % 10000 === 0) {
 				printf("Sorted %d elements out of %d\n", $total_sorted, $this->total_elements);
@@ -305,7 +307,7 @@ class ExternalSort
 $current_folder = __DIR__;
 $start_time = microtime(true);
 
-$sorter = new ExternalSort($current_folder . '/tmp', 'input.txt', 'output.txt', 1024, 1024, 'asc');
+$sorter = new ExternalSort($current_folder . '/tmp', 'input.txt', 'output.txt', 8192, 8192, 'desc');
 
 $sorter->external_sort();
 
